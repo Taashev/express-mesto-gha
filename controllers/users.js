@@ -25,9 +25,31 @@ const createUser = (req, res) => {
     .catch((err) => res.send({ message: `Произошла ошибка: ${err}` }));
 };
 
+// update profile
+const updateProfile = (req, res) => {
+  const { name, about } = req.body;
+  const { _id } = req.user;
+
+  User.findByIdAndUpdate(_id, { name, about }, { new: true })
+    .then((user) => res.send({ user }))
+    .catch((err) => res.send({ message: `Произошла ошибка: ${err}` }));
+};
+
+// update avatar
+const updateAvatar = (req, res) => {
+  const { avatar } = req.body;
+  const { _id } = req.user;
+
+  User.findByIdAndUpdate(_id, { avatar }, { new: true })
+    .then((user) => res.send({ user }))
+    .catch((err) => res.send({ message: `Произошла ошибка: ${err}` }));
+};
+
 // export
 module.exports = {
   getUsers,
   getUser,
   createUser,
+  updateProfile,
+  updateAvatar,
 };

@@ -26,9 +26,39 @@ const deleteCard = (req, res) => {
     .catch((err) => res.send({ message: `Произошла ошибка: ${err}` }));
 };
 
+// like card
+const likeCard = (req, res) => {
+  const { cardId } = req.params;
+  const { _id } = req.user;
+
+  Card.findByIdAndUpdate(
+    cardId,
+    { $addToSet: { likes: _id } },
+    { new: true },
+  )
+    .then((card) => res.send(card))
+    .catch((err) => res.send({ message: `Произошла ошибка: ${err}` }));
+};
+
+// dislike card
+const dislikeCard = (req, res) => {
+  const { cardId } = req.params;
+  const { _id } = req.user;
+
+  Card.findByIdAndUpdate(
+    cardId,
+    { $pull: { likes: _id } },
+    { new: true },
+  )
+    .then((card) => res.send(card))
+    .catch((err) => res.send({ message: `Произошла ошибка: ${err}` }));
+};
+
 // export
 module.exports = {
   getCards,
   createCard,
   deleteCard,
+  likeCard,
+  dislikeCard,
 };
