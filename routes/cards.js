@@ -9,16 +9,12 @@ const {
 
 // get cards
 router.get('/', getCards);
-
 // create card
 router.post('/', createCard);
-
 // delete card
 router.delete('/:cardId', deleteCard);
-
 // like card
 router.put('/:cardId/likes', likeCard);
-
 // dislike card
 router.delete('/:cardId/likes', dislikeCard);
 
