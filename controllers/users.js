@@ -1,18 +1,12 @@
 const User = require('../models/user');
-const {
-  HttpError,
-  NotFound,
-} = require('../utils/Errors');
-
-const httpError = new HttpError('Переданы некорректные данные пользователя');
-const idHttpError = new HttpError('Некорректный id');
-const userNotFound = new NotFound('Такого пользователя не существует');
+const { checkError } = require('../modules/checkError');
+const { messageError } = require('../utils/constants');
 
 // get users
 const getUsers = (req, res, next) => {
   User.find({})
     .then((users) => res.send(users))
-    .catch((err) => next(err));
+    .catch((err) => next(checkError(err)));
 };
 
 // get user
@@ -20,14 +14,8 @@ const getUser = (req, res, next) => {
   const { userId } = req.params;
 
   User.findById(userId)
-    .then((user) => {
-      if (!user) {
-        next(userNotFound);
-        return;
-      }
-      res.send(user);
-    })
-    .catch(() => next(idHttpError));
+    .then((user) => res.send(user))
+    .catch((err) => next(checkError(err, messageError.userIdError)));
 };
 
 // create user
@@ -36,7 +24,7 @@ const createUser = (req, res, next) => {
 
   User.create({ name, about, avatar })
     .then((user) => res.send(user))
-    .catch(() => next(httpError));
+    .catch((err) => next(checkError(err, messageError.userValidationError)));
 };
 
 // update profile
@@ -46,7 +34,7 @@ const updateProfile = (req, res, next) => {
 
   User.findByIdAndUpdate(userId, { name, about }, { new: true, runValidators: true })
     .then((user) => res.send(user))
-    .catch(() => next(httpError));
+    .catch((err) => next(checkError(err, messageError.userValidationError)));
 };
 
 // update avatar
@@ -56,7 +44,7 @@ const updateAvatar = (req, res, next) => {
 
   User.findByIdAndUpdate(userId, { avatar }, { new: true, runValidators: true })
     .then((user) => res.send(user))
-    .catch(() => next(httpError));
+    .catch((err) => next(checkError(err, messageError.userValidationError)));
 };
 
 // export

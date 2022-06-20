@@ -1,17 +1,12 @@
 const Card = require('../models/card');
-const {
-  HttpError,
-  NotFound,
-} = require('../utils/Errors');
-
-const httpError = new HttpError('Переданы некорректные данные карточки');
-const cardNotFound = new NotFound('Такой карточки нет');
+const { checkError } = require('../modules/checkError');
+const { messageError } = require('../utils/constants');
 
 // get cards
 const getCards = (req, res, next) => {
   Card.find({})
     .then((cards) => res.send(cards))
-    .catch((err) => next(err));
+    .catch((err) => next(checkError(err)));
 };
 
 // create card
@@ -21,7 +16,7 @@ const createCard = (req, res, next) => {
 
   Card.create({ name, link, owner })
     .then((card) => res.send(card))
-    .catch(() => next(httpError));
+    .catch((err) => next(checkError(err, messageError.cardValidationError)));
 };
 
 // delete card
@@ -29,14 +24,8 @@ const deleteCard = (req, res, next) => {
   const { cardId } = req.params;
 
   Card.findByIdAndRemove(cardId)
-    .then((cards) => {
-      if (!cards) {
-        next(cardNotFound);
-        return;
-      }
-      res.send(cards);
-    })
-    .catch(() => next(httpError));
+    .then((cards) => res.send(cards))
+    .catch((err) => next(checkError(err, messageError.cardIdError)));
 };
 
 // like card
@@ -49,14 +38,8 @@ const likeCard = (req, res, next) => {
     { $addToSet: { likes: _id } },
     { new: true, runValidators: true },
   )
-    .then((card) => {
-      if (!card) {
-        next(cardNotFound);
-        return;
-      }
-      res.send(card);
-    })
-    .catch(() => next(httpError));
+    .then((card) => res.send(card))
+    .catch((err) => next(checkError(err, messageError.cardIdError)));
 };
 
 // dislike card
@@ -69,14 +52,8 @@ const dislikeCard = (req, res, next) => {
     { $pull: { likes: _id } },
     { new: true, runValidators: true },
   )
-    .then((card) => {
-      if (!card) {
-        next(cardNotFound);
-        return;
-      }
-      res.send(card);
-    })
-    .catch(() => next(httpError));
+    .then((card) => res.send(card))
+    .catch((err) => next(checkError(err, messageError.cardIdError)));
 };
 
 // export

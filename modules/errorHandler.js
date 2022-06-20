@@ -1,15 +1,7 @@
-const {
-  NotFound,
-  HttpError,
-} = require('../utils/Errors');
+const { HttpError } = require('../components/HttpError');
 
 // eslint-disable-next-line no-unused-vars
 const errorHandler = (err, req, res, next) => {
-  if (err instanceof NotFound) {
-    res.status(err.statusCode).send({ message: err.message });
-    return;
-  }
-
   if (err instanceof HttpError) {
     res.status(err.statusCode).send({ message: err.message });
     return;

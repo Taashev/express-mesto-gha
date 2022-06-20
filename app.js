@@ -8,6 +8,8 @@ const staticUserId = require('./modules/staticUserId');
 const users = require('./routes/users');
 const cards = require('./routes/cards');
 const { errorHandler, notFound } = require('./modules/errorHandler');
+const { doesUserExist } = require('./modules/doesUserExist');
+const { doesCardExist } = require('./modules/doesCardExist');
 
 // connect mestodb
 mongoose.connect('mongodb://localhost:27017/mestodb');
@@ -25,11 +27,16 @@ app.use(bodyParser.urlencoded({ extended: true }));
 // static user id
 app.use(staticUserId);
 
+// users
+app.use('/users/:userId', doesUserExist);
 app.use('/users', users);
+
+// cards
+app.use('/cards/:cardId', doesCardExist);
 app.use('/cards', cards);
 
 // error handler
-app.use(errorHandler);
 app.use('*', notFound);
+app.use(errorHandler);
 
 app.listen(PORT);
