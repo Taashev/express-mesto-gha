@@ -5,7 +5,7 @@ const { messageError } = require('../utils/constants');
 // get cards
 const getCards = (req, res, next) => {
   Card.find({})
-    .then((cards) => res.send(cards))
+    .then((cards) => res.send({ cards }))
     .catch((err) => next(checkError(err)));
 };
 
@@ -15,7 +15,7 @@ const createCard = (req, res, next) => {
   const owner = req.user._id;
 
   Card.create({ name, link, owner })
-    .then((card) => res.send(card))
+    .then((card) => res.send({ card }))
     .catch((err) => next(checkError(err, messageError.cardValidationError)));
 };
 
@@ -24,7 +24,7 @@ const deleteCard = (req, res, next) => {
   const { cardId } = req.params;
 
   Card.findByIdAndRemove(cardId)
-    .then((cards) => res.send(cards))
+    .then((cards) => res.send({ cards }))
     .catch((err) => next(checkError(err, messageError.cardIdError)));
 };
 
@@ -38,7 +38,7 @@ const likeCard = (req, res, next) => {
     { $addToSet: { likes: _id } },
     { new: true, runValidators: true },
   )
-    .then((card) => res.send(card))
+    .then((card) => res.send({ card }))
     .catch((err) => next(checkError(err, messageError.cardIdError)));
 };
 
@@ -52,7 +52,7 @@ const dislikeCard = (req, res, next) => {
     { $pull: { likes: _id } },
     { new: true, runValidators: true },
   )
-    .then((card) => res.send(card))
+    .then((card) => res.send({ card }))
     .catch((err) => next(checkError(err, messageError.cardIdError)));
 };
 

@@ -5,7 +5,7 @@ const { messageError } = require('../utils/constants');
 // get users
 const getUsers = (req, res, next) => {
   User.find({})
-    .then((users) => res.send(users))
+    .then((users) => res.send({ users }))
     .catch((err) => next(checkError(err)));
 };
 
@@ -14,7 +14,7 @@ const getUser = (req, res, next) => {
   const { userId } = req.params;
 
   User.findById(userId)
-    .then((user) => res.send(user))
+    .then((user) => res.send({ user }))
     .catch((err) => next(checkError(err, messageError.userIdError)));
 };
 
@@ -23,7 +23,7 @@ const createUser = (req, res, next) => {
   const { name, about, avatar } = req.body;
 
   User.create({ name, about, avatar })
-    .then((user) => res.send(user))
+    .then((user) => res.send({ user }))
     .catch((err) => next(checkError(err, messageError.userValidationError)));
 };
 
@@ -33,7 +33,7 @@ const updateProfile = (req, res, next) => {
   const userId = req.user._id;
 
   User.findByIdAndUpdate(userId, { name, about }, { new: true, runValidators: true })
-    .then((user) => res.send(user))
+    .then((user) => res.send({ user }))
     .catch((err) => next(checkError(err, messageError.userValidationError)));
 };
 
@@ -43,7 +43,7 @@ const updateAvatar = (req, res, next) => {
   const userId = req.user._id;
 
   User.findByIdAndUpdate(userId, { avatar }, { new: true, runValidators: true })
-    .then((user) => res.send(user))
+    .then((user) => res.send({ user }))
     .catch((err) => next(checkError(err, messageError.userValidationError)));
 };
 
