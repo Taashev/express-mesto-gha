@@ -20,9 +20,21 @@ const getUser = (req, res, next) => {
 
 // create user
 const createUser = (req, res, next) => {
-  const { name, about, avatar } = req.body;
+  const {
+    email,
+    password,
+    name,
+    about,
+    avatar,
+  } = req.body;
 
-  User.create({ name, about, avatar })
+  User.create({
+    email,
+    password,
+    name,
+    about,
+    avatar,
+  })
     .then((user) => res.send({ user }))
     .catch((err) => next(checkError(err, messageError.userValidationError)));
 };
