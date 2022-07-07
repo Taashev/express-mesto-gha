@@ -2,14 +2,17 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
+const { errors } = require('celebrate');
+const cookieParser = require('cookie-parser');
 
 // import my modules
-const staticUserId = require('./modules/staticUserId');
+const login = require('./routes/login');
+const createUser = require('./routes/createUser');
+const auth = require('./middlewares/auth');
 const users = require('./routes/users');
 const cards = require('./routes/cards');
-const { errorHandler, notFound } = require('./modules/errorHandler');
-const { doesUserExist } = require('./modules/doesUserExist');
-const { doesCardExist } = require('./modules/doesCardExist');
+const { handleError, notFound } = require('./middlewares/handleError');
+const { doesCardExist } = require('./middlewares/doesCardExist');
 
 // connect mestodb
 mongoose.connect('mongodb://localhost:27017/mestodb');
@@ -20,23 +23,34 @@ const app = express();
 // PORT 3000
 const { PORT = 3000 } = process.env;
 
+// cookie parser
+app.use(cookieParser());
+
 // body parser
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-// static user id
-app.use(staticUserId);
+// login
+app.use('/signin', login);
+
+// create user
+app.use('/signup', createUser);
+
+// authorization
+app.use(auth);
 
 // users
-app.use('/users/:userId', doesUserExist);
 app.use('/users', users);
 
 // cards
 app.use('/cards/:cardId', doesCardExist);
 app.use('/cards', cards);
 
+// errors
+app.use(errors());
+
 // error handler
 app.use('*', notFound);
-app.use(errorHandler);
+app.use(handleError);
 
 app.listen(PORT);

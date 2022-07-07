@@ -1,4 +1,4 @@
-const { HttpError } = require('./HttpError');
+const HttpError = require('./HttpError');
 
 class NotFoundError extends HttpError {
   constructor(message) {
@@ -8,6 +8,4 @@ class NotFoundError extends HttpError {
   }
 }
 
-module.exports = {
-  NotFoundError,
-};
+module.exports = NotFoundError;

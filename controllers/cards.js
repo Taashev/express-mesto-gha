@@ -1,59 +1,76 @@
 const Card = require('../models/card');
-const { checkError } = require('../modules/checkError');
+const { validationError } = require('../middlewares/validationError');
 const { messageError } = require('../utils/constants');
+const HttpError = require('../components/HttpError');
 
 // get cards
 const getCards = (req, res, next) => {
   Card.find({})
-    .then((cards) => res.send({ cards }))
-    .catch((err) => next(checkError(err)));
+    .populate('owner')
+    .then((cards) => res.send(cards))
+    .catch((err) => next(validationError(err)));
 };
 
 // create card
 const createCard = (req, res, next) => {
+  const owner = req.user.id;
   const { name, link } = req.body;
-  const owner = req.user._id;
 
   Card.create({ name, link, owner })
-    .then((card) => res.send({ card }))
-    .catch((err) => next(checkError(err, messageError.cardValidationError)));
+    .then((card) => res.send(card))
+    .catch((err) => next(validationError(err, messageError.cardValidationError)));
 };
 
 // delete card
 const deleteCard = (req, res, next) => {
   const { cardId } = req.params;
 
-  Card.findByIdAndRemove(cardId)
-    .then((cards) => res.send({ cards }))
-    .catch((err) => next(checkError(err, messageError.cardIdError)));
+  Card.findById(cardId)
+    // eslint-disable-next-line consistent-return
+    .then((card) => {
+      const owner = JSON.stringify(card.owner).replaceAll('"', '');
+      const userId = req.user.id;
+
+      if (owner !== userId) {
+        return next(new HttpError('Нельзя удалить чужую карточку'));
+      }
+
+      Card.findByIdAndRemove(cardId)
+        // eslint-disable-next-line no-shadow
+        .then((card) => {
+          res.send(card);
+        })
+        .catch((err) => next(validationError(err, messageError.cardIdError)));
+    })
+    .catch((err) => next(validationError(err, messageError.cardIdError)));
 };
 
 // like card
 const likeCard = (req, res, next) => {
+  const UserId = req.user.id;
   const { cardId } = req.params;
-  const { _id } = req.user;
 
   Card.findByIdAndUpdate(
     cardId,
-    { $addToSet: { likes: _id } },
+    { $addToSet: { likes: UserId } },
     { new: true, runValidators: true },
   )
-    .then((card) => res.send({ card }))
-    .catch((err) => next(checkError(err, messageError.cardIdError)));
+    .then((card) => res.send(card))
+    .catch((err) => next(validationError(err, messageError.cardIdError)));
 };
 
 // dislike card
 const dislikeCard = (req, res, next) => {
+  const UserId = req.user.id;
   const { cardId } = req.params;
-  const { _id } = req.user;
 
   Card.findByIdAndUpdate(
     cardId,
-    { $pull: { likes: _id } },
+    { $pull: { likes: UserId } },
     { new: true, runValidators: true },
   )
-    .then((card) => res.send({ card }))
-    .catch((err) => next(checkError(err, messageError.cardIdError)));
+    .then((card) => res.send(card))
+    .catch((err) => next(validationError(err, messageError.cardIdError)));
 };
 
 // export
