@@ -18,6 +18,12 @@ const login = (req, res, next) => {
         maxAge: 3600000 * 24 * 7, // 7 дней
         httpOnly: true,
         sameSite: true,
+      }).send({
+        email: user.email,
+        name: user.name,
+        about: user.about,
+        avatar: user.avatar,
+        _id: user._id,
       }).end();
     })
     .catch(next);

@@ -5,14 +5,13 @@ const authError = new Unauthorized('Необходима авторизация'
 
 // eslint-disable-next-line consistent-return
 const auth = (req, res, next) => {
-  const { authorization } = req.headers;
+  const { cookie } = req.headers;
 
-  if (!authorization || !authorization.startsWith('Bearer ')) {
+  if (!cookie || !cookie.startsWith('jwt=')) {
     return next(authError);
   }
 
-  const token = authorization.replace('Bearer ', '');
-
+  const token = cookie.replace('jwt=', '');
   let payload;
 
   try {
