@@ -12,7 +12,6 @@ const auth = require('./middlewares/auth');
 const users = require('./routes/users');
 const cards = require('./routes/cards');
 const { handleError, notFound } = require('./middlewares/handleError');
-const { doesCardExist } = require('./middlewares/doesCardExist');
 
 // connect mestodb
 mongoose.connect('mongodb://localhost:27017/mestodb');
@@ -43,7 +42,6 @@ app.use(auth);
 app.use('/users', users);
 
 // cards
-app.use('/cards/:cardId', doesCardExist);
 app.use('/cards', cards);
 
 // errors

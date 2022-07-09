@@ -48,13 +48,15 @@ const createUser = (req, res, next) => {
       avatar: user.avatar,
       _id: user._id,
     }))
-    .catch((err) => next(validationError(err, messageError.userValidationError)));
+    .catch((err) => next(validationError(err, err.name === 'MongoServerError' ? 'Этот email уже занят' : messageError.userValidationError)));
 };
 
 // get users
 const getUsers = (req, res, next) => {
   User.find({})
-    .then((users) => res.send(users))
+    .then((users) => {
+      res.send(users);
+    })
     .catch(next);
 };
 

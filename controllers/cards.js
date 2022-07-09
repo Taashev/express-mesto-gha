@@ -1,7 +1,8 @@
 const Card = require('../models/card');
 const { validationError } = require('../middlewares/validationError');
 const { messageError } = require('../utils/constants');
-const HttpError = require('../components/HttpError');
+const NotFoundError = require('../components/NotFoundError');
+const ForbiddenError = require('../components/ForbiddenError');
 
 // get cards
 const getCards = (req, res, next) => {
@@ -28,11 +29,15 @@ const deleteCard = (req, res, next) => {
   Card.findById(cardId)
     // eslint-disable-next-line consistent-return
     .then((card) => {
+      if (!card) {
+        return next(new NotFoundError(messageError.cardNotFound));
+      }
+
       const owner = JSON.stringify(card.owner).replaceAll('"', '');
       const userId = req.user.id;
 
       if (owner !== userId) {
-        return next(new HttpError('Нельзя удалить чужую карточку'));
+        return next(new ForbiddenError('Нельзя удалить чужую карточку'));
       }
 
       Card.findByIdAndRemove(cardId)
@@ -55,7 +60,14 @@ const likeCard = (req, res, next) => {
     { $addToSet: { likes: UserId } },
     { new: true, runValidators: true },
   )
-    .then((card) => res.send(card))
+    // eslint-disable-next-line consistent-return
+    .then((card) => {
+      if (!card) {
+        return next(validationError(new NotFoundError(messageError.cardNotFound)));
+      }
+
+      res.send(card);
+    })
     .catch((err) => next(validationError(err, messageError.cardIdError)));
 };
 
@@ -69,7 +81,14 @@ const dislikeCard = (req, res, next) => {
     { $pull: { likes: UserId } },
     { new: true, runValidators: true },
   )
-    .then((card) => res.send(card))
+    // eslint-disable-next-line consistent-return
+    .then((card) => {
+      if (!card) {
+        return next(validationError(new NotFoundError(messageError.cardNotFound)));
+      }
+
+      res.send(card);
+    })
     .catch((err) => next(validationError(err, messageError.cardIdError)));
 };
 

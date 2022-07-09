@@ -16,7 +16,11 @@ router.get('/', getUsers);
 router.get('/me', getUserInfo);
 
 // get user
-router.get('/:userId', getUser);
+router.get('/:userId', celebrate({
+  params: Joi.object().keys({
+    userId: Joi.string().required().length(24),
+  }),
+}), getUser);
 
 // update profile
 router.patch('/me', celebrate({
