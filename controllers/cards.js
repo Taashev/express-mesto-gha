@@ -33,7 +33,7 @@ const deleteCard = (req, res, next) => {
         return next(new NotFoundError(messageError.cardNotFound));
       }
 
-      const owner = JSON.stringify(card.owner).replaceAll('"', '');
+      const owner = card.owner.toString();
       const userId = req.user.id;
 
       if (owner !== userId) {
