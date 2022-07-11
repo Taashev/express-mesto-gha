@@ -29,11 +29,11 @@ app.use(cookieParser());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-// login
-app.use('/signin', login);
-
 // create user
 app.use('/signup', createUser);
+
+// login
+app.use('/signin', login);
 
 // authorization
 app.use(auth);

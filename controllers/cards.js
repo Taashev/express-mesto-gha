@@ -1,15 +1,15 @@
 const Card = require('../models/card');
-const { validationError } = require('../middlewares/validationError');
 const { messageError } = require('../utils/constants');
 const NotFoundError = require('../components/NotFoundError');
 const ForbiddenError = require('../components/ForbiddenError');
+const HttpError = require('../components/HttpError');
 
 // get cards
 const getCards = (req, res, next) => {
   Card.find({})
     .populate('owner')
     .then((cards) => res.send(cards))
-    .catch((err) => next(validationError(err)));
+    .catch(next);
 };
 
 // create card
@@ -18,8 +18,14 @@ const createCard = (req, res, next) => {
   const { name, link } = req.body;
 
   Card.create({ name, link, owner })
-    .then((card) => res.send(card))
-    .catch((err) => next(validationError(err, messageError.cardValidationError)));
+    .then((card) => res.status(201).send(card))
+    .catch((err) => {
+      if (err.name === 'ValidationError') {
+        return next(new HttpError(messageError.cardValidationError));
+      }
+
+      return next(err);
+    });
 };
 
 // delete card
@@ -27,7 +33,6 @@ const deleteCard = (req, res, next) => {
   const { cardId } = req.params;
 
   Card.findById(cardId)
-    // eslint-disable-next-line consistent-return
     .then((card) => {
       if (!card) {
         return next(new NotFoundError(messageError.cardNotFound));
@@ -40,56 +45,77 @@ const deleteCard = (req, res, next) => {
         return next(new ForbiddenError('Нельзя удалить чужую карточку'));
       }
 
-      Card.findByIdAndRemove(cardId)
-        // eslint-disable-next-line no-shadow
-        .then((card) => {
-          res.send(card);
+      return Card.findByIdAndRemove(cardId)
+        .then((result) => {
+          res.send(result);
         })
-        .catch((err) => next(validationError(err, messageError.cardIdError)));
+        .catch((err) => {
+          if (err.name === 'CastError') {
+            return next(new HttpError(messageError.cardIdError));
+          }
+
+          return next(err);
+        });
     })
-    .catch((err) => next(validationError(err, messageError.cardIdError)));
+    .catch((err) => {
+      if (err.name === 'CastError') {
+        return next(new HttpError(messageError.cardIdError));
+      }
+
+      return next(err);
+    });
 };
 
 // like card
 const likeCard = (req, res, next) => {
-  const UserId = req.user.id;
+  const userId = req.user.id;
   const { cardId } = req.params;
 
   Card.findByIdAndUpdate(
     cardId,
-    { $addToSet: { likes: UserId } },
-    { new: true, runValidators: true },
+    { $addToSet: { likes: userId } },
+    { new: true },
   )
-    // eslint-disable-next-line consistent-return
     .then((card) => {
       if (!card) {
-        return next(validationError(new NotFoundError(messageError.cardNotFound)));
+        return next(new NotFoundError(messageError.cardNotFound));
       }
 
-      res.send(card);
+      return res.send(card);
     })
-    .catch((err) => next(validationError(err, messageError.cardIdError)));
+    .catch((err) => {
+      if (err.name === 'CastError') {
+        return next(new HttpError(messageError.cardIdError));
+      }
+
+      return next(err);
+    });
 };
 
 // dislike card
 const dislikeCard = (req, res, next) => {
-  const UserId = req.user.id;
+  const userId = req.user.id;
   const { cardId } = req.params;
 
   Card.findByIdAndUpdate(
     cardId,
-    { $pull: { likes: UserId } },
-    { new: true, runValidators: true },
+    { $pull: { likes: userId } },
+    { new: true },
   )
-    // eslint-disable-next-line consistent-return
     .then((card) => {
       if (!card) {
-        return next(validationError(new NotFoundError(messageError.cardNotFound)));
+        return next(new NotFoundError(messageError.cardNotFound));
       }
 
-      res.send(card);
+      return res.send(card);
     })
-    .catch((err) => next(validationError(err, messageError.cardIdError)));
+    .catch((err) => {
+      if (err.name === 'CastError') {
+        return next(new HttpError(messageError.cardIdError));
+      }
+
+      return next(err);
+    });
 };
 
 // export

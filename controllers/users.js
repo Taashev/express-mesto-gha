@@ -1,9 +1,10 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/user');
-const NotFoundError = require('../components/NotFoundError');
-const { validationError } = require('../middlewares/validationError');
 const { messageError } = require('../utils/constants');
+const NotFoundError = require('../components/NotFoundError');
+const ConflictError = require('../components/ConflictError');
+const HttpError = require('../components/HttpError');
 
 // login
 const login = (req, res, next) => {
@@ -47,14 +48,24 @@ const createUser = (req, res, next) => {
       about,
       avatar,
     }))
-    .then((user) => res.send({
+    .then((user) => res.status(201).send({
       email: user.email,
       name: user.name,
       about: user.about,
       avatar: user.avatar,
       _id: user._id,
     }))
-    .catch((err) => next(validationError(err, err.name === 'MongoServerError' ? 'Этот email уже занят' : messageError.userValidationError)));
+    .catch((err) => {
+      if (err.name === 'ValidationError' || err.name === 'Error') {
+        return next(new HttpError(messageError.userValidationError));
+      }
+
+      if (err.code === 11000) {
+        return next(new ConflictError('Этот email уже занят'));
+      }
+
+      return next(err);
+    });
 };
 
 // get users
@@ -71,15 +82,20 @@ const getUser = (req, res, next) => {
   const { userId } = req.params;
 
   User.findById(userId)
-    // eslint-disable-next-line consistent-return
     .then((user) => {
       if (user === null) {
-        return next(validationError(new NotFoundError('Такого пользователя не существует')));
+        return next(new NotFoundError('Такого пользователя не существует'));
       }
 
-      res.send(user);
+      return res.send(user);
     })
-    .catch((err) => next(validationError(err, messageError.userIdError)));
+    .catch((err) => {
+      if (err.name === 'CastError') {
+        return next(new HttpError(messageError.userIdError));
+      }
+
+      return next(err);
+    });
 };
 
 // get user info
@@ -97,8 +113,20 @@ const updateProfile = (req, res, next) => {
   const { name, about } = req.body;
 
   User.findByIdAndUpdate(userId, { name, about }, { new: true, runValidators: true })
-    .then((user) => res.send(user))
-    .catch((err) => next(validationError(err, messageError.userValidationError)));
+    .then((user) => {
+      if (!name || !about) {
+        throw new HttpError(messageError.userValidationError);
+      }
+
+      res.send(user);
+    })
+    .catch((err) => {
+      if (err.name === 'ValidationError') {
+        return next(new HttpError(messageError.userValidationError));
+      }
+
+      return next(err);
+    });
 };
 
 // update avatar
@@ -107,8 +135,20 @@ const updateAvatar = (req, res, next) => {
   const { avatar } = req.body;
 
   User.findByIdAndUpdate(userId, { avatar }, { new: true, runValidators: true })
-    .then((user) => res.send(user))
-    .catch((err) => next(validationError(err, messageError.userValidationError)));
+    .then((user) => {
+      if (!avatar) {
+        throw new HttpError(messageError.userValidationError);
+      }
+
+      res.send(user);
+    })
+    .catch((err) => {
+      if (err.name === 'ValidationError') {
+        return next(new HttpError(messageError.userValidationError));
+      }
+
+      return next(err);
+    });
 };
 
 // export
