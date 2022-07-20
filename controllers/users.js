@@ -9,16 +9,22 @@ const HttpError = require('../components/HttpError');
 // login
 const login = (req, res, next) => {
   const { email, password } = req.body;
+  const { NODE_ENV, JWT_SECRET } = process.env;
 
   User.findUserByCredentials(email, password)
     .then((user) => {
       const id = user._id;
-      const token = jwt.sign({ id }, 'secret-key', { expiresIn: '7d' });
+      const token = jwt.sign(
+        { id },
+        NODE_ENV === 'production' ? JWT_SECRET : 'secret-key',
+        { expiresIn: '7d' },
+      );
 
       res.cookie('jwt', token, {
         maxAge: 3600000 * 24 * 7, // 7 дней
         httpOnly: true,
-        sameSite: true,
+        sameSite: 'none',
+        secure: true,
       }).send({
         email: user.email,
         name: user.name,
@@ -28,6 +34,13 @@ const login = (req, res, next) => {
       }).end();
     })
     .catch(next);
+};
+
+// logout
+const logout = (req, res) => {
+  res.status(200)
+    .clearCookie('jwt')
+    .send({ message: 'Покасики!' });
 };
 
 // create user
@@ -154,6 +167,7 @@ const updateAvatar = (req, res, next) => {
 // export
 module.exports = {
   login,
+  logout,
   getUsers,
   getUser,
   getUserInfo,
