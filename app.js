@@ -5,6 +5,7 @@ const bodyParser = require('body-parser');
 const { errors } = require('celebrate');
 const cookieParser = require('cookie-parser');
 const cors = require('cors');
+const limiter = require('./middlewares/limiter');
 require('dotenv').config();
 
 // import my modules
@@ -37,7 +38,10 @@ mongoose.connect('mongodb://localhost:27017/mestodb');
 const app = express();
 
 // PORT
-const { PORT = 3000 } = process.env;
+const { PORT = 3001 } = process.env;
+
+// rate limiter
+app.use(limiter);
 
 // reqest logger
 app.use(requestLogger);
