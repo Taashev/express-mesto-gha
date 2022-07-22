@@ -5,7 +5,7 @@ const bodyParser = require('body-parser');
 const { errors } = require('celebrate');
 const cookieParser = require('cookie-parser');
 const cors = require('cors');
-const limiter = require('./middlewares/limiter');
+const helmet = require('helmet');
 require('dotenv').config();
 
 // import my modules
@@ -15,6 +15,7 @@ const createUser = require('./routes/createUser');
 const auth = require('./middlewares/auth');
 const users = require('./routes/users');
 const cards = require('./routes/cards');
+const limiter = require('./middlewares/limiter');
 const { handleError, notFound } = require('./middlewares/handleError');
 const { requestLogger, errorLogger } = require('./middlewares/logger');
 
@@ -42,6 +43,9 @@ const { PORT = 3001 } = process.env;
 
 // rate limiter
 app.use(limiter);
+
+// helmet
+app.use(helmet());
 
 // reqest logger
 app.use(requestLogger);
